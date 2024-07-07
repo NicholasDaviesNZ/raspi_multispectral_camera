@@ -51,10 +51,11 @@ metadata_base = {
 
 # should consider using a single metadata obj and do a call to the verious pi zeros at the start, 
 # telling them to start streaming the cameras with the given properties, this sould speed up the capture process
-
+logger.info('connecting')
 print('connecting')
 # Connect to the Vehicle (modify the connection string accordingly)
 vehicle = connect('/dev/serial0', wait_ready=True, baud=57600)
+logger.info('connected')
 print('connected')
 
 
@@ -66,6 +67,10 @@ def ensure_directory_exists(directory_path):
 # function to ask the pi zero to take an image and pass it back, takes in the url of the web server on the desired pi, and the metadata dict
 # passes back a zip file (over writen with each call to that pi zero) and saves the unique images and meta data to the assocated sub directory
 def call_pi_zero(api_url, metadata):
+    """
+    Function to call the downward facing pi zero cameras and instruct them to take and image and retrieve it. 
+    It takes in the url for the particular pi zero, and the metadata required for the image to be taken
+    """
     # Send a POST request with metadata
     response = requests.post(api_url, json=metadata, stream=True)
     # Save the received image file
@@ -79,10 +84,15 @@ def call_pi_zero(api_url, metadata):
         zip_ref.extractall(f"images")
 
     # Print the server's response
+    logger.info(f'image capature complete {api_url}')
     print(f'done image capture {api_url}')
     print(response)
 
 def call_pi_zero_upfacing(api_url, metadata):
+    """
+    Function to call the upward facing pi zero cameras and instruct them to take an image and process it, 
+    returning only the required data, band wise intensity and camera exposure settings 
+    """
     try:
         # Send a POST request with metadata
         response = requests.post(api_url, json=metadata)
@@ -98,6 +108,7 @@ def call_pi_zero_upfacing(api_url, metadata):
         return(returned_upfacing_data)
 
     except requests.exceptions.RequestException as e:
+        logger.info("Error: {str(e)}")
         print(f"Error: {str(e)}")
         return {"error": str(e)}
 
@@ -118,6 +129,12 @@ def print_gps_status():
 
 
 def do_band_removals(noir_upfacing, vis_upfacing, noir_exposure, vis_exposure, vis_to_noir_upfacing_ratio, noir_upfacing_exposure, vis_upfacing_exposure, cur_time):
+    """
+    this is the main camera function which takes all of the retrieved raw images and does the required manipulations to get them 
+    to a standardized level of exposures etc. based on the exposures, gains etc. and the upfacing cameras it does band wise corrections and saves them 
+    as band wise gray scale images
+    """
+    
     # load all of the images we need as arrays
     #vis_to_noir_ratio = noir_exposure/vis_exposure # add check that the raio is below 1 - converting vis into the noir exposire
     #vis_to_noir_upfacing_ratio = noir_upfacing_exposure/vis_upfacing_exposure
@@ -185,6 +202,10 @@ def do_band_removals(noir_upfacing, vis_upfacing, noir_exposure, vis_exposure, v
 #    Image.fromarray(noir_blue.astype(np.uint8)).save(f'images/PiMS_{cur_time}_nir.jpg')
 
 def do_upfacing_band_removals(vis_to_noir_upfacing_ratio, vis_upfacing, noir_upfacing):
+    """
+    processing of the upfacing cameras, it normalizes the values form each band in the cameras. This data is used to normalize
+    reflectance from the downward facing cameras to make them more stable from image to image. 
+    """
     #convert the vis to the same exposure level as the noir
     vis_upfacing['RedMean'] = vis_upfacing['RedMean']*vis_to_noir_upfacing_ratio
     vis_upfacing['GreenMean'] = vis_upfacing['GreenMean']*vis_to_noir_upfacing_ratio
@@ -209,7 +230,7 @@ def do_upfacing_band_removals(vis_to_noir_upfacing_ratio, vis_upfacing, noir_upf
     return(upfacing_band_intensities)
 
 
-# convert decimals to degrees
+# these functions convert the pixhawk lats and longs to a from a decinmal degree forma
 def dec_to_deg(value):
     abs_value = abs(value)
     deg =  int(abs_value)
@@ -237,6 +258,9 @@ def radians_to_degrees(radians):
     return (degrees + 360) % 360
 
 def get_FC_data():
+    """
+    connect to pixhawk and get the current location and vehicle orientation
+    """
     time.sleep(0.5) # wait to line up the call to the FC with the camera exposure times more correctly, may need to change later
     FC_data_dict = {
         'GPSLatitude':vehicle.location.global_frame.lat,
@@ -249,16 +273,26 @@ def get_FC_data():
         'Pitch':vehicle.attitude.pitch,
         'Roll':vehicle.attitude.roll,
         }
+    logger.info("got FC data")
     print('got FC data')
     return(FC_data_dict)
 
 def alt_to_alt(alt):
+    """
+    converting altitude from the pixhawk format to readable 
+    """
     if alt is None or alt <= 0:
         return Fraction(0, 1000)
     else:
         return Fraction(round(alt * 1000), 1000)
 
 def capture_thermal(cur_time):
+    """
+    function which is called to get the thermal image - note this is causing some issues still
+    """
+    logger.info("capturing thermal image")
+    print("capturing thermal image")
+
     frame = np.zeros((24*32,))  # setup array for storing all 768 temperatures
 
     try:
@@ -279,6 +313,7 @@ def capture_thermal(cur_time):
         thermal_image = Image.fromarray(upsampled_grid_kelvin_uint16)
 
         thermal_image.save(f"images/PiMS_{cur_time}_lwir.tif")
+        logger.info('saved thermal image')
         print('saved thermal image')
         # Leaving this bit for now until the above is completed
         # Create a colormap and normalize to map temperatures to colors
@@ -292,13 +327,17 @@ def capture_thermal(cur_time):
         return()
 
     except Exception as e:
+        logger.info(f'Error: {e}')
         print(f'Error: {e}')
 
 def add_metadata(cur_time, cur_time_string, FC_data_dict):
+    """
+    for each image this file adds the metadata of where the image was taken from, along with bands etc
+    """
+    logger.info('adding metadata')
     print('adding metadata')
     for image_colour in file_colour_names_list:
         if image_colour == 'lwir':
-            print('lwir')
             metadata = pyexiv2.ImageMetadata(f'images/PiMS_{cur_time}_{image_colour}.tif')
             metadata.read()
             metadata['Exif.Image.Make'] = "MicaSense" 
@@ -325,8 +364,10 @@ def add_metadata(cur_time, cur_time_string, FC_data_dict):
         metadata['Xmp.Camera.Roll'] = radians_to_degrees(FC_data_dict['Roll'])
         metadata.write()
 
-
-try:
+def catpure_images():
+    """
+    Main function which is run continuously and coordinates everything based on the GPIO input from the pixhawk
+    """
     while True:
         input_state = GPIO.input(gpio_pin)
         #voltage = GPIO.input(gpio_pin)
@@ -336,6 +377,8 @@ try:
             start_time = time.time()
             cur_time = int(time.time())
             cur_time_string = time.strftime("%Y:%m:%d %H:%M:%S")
+            logger.info(cur_time_string)
+            logger.info("print_gps_status")
             print_gps_status()
             metadata_vis_test = {
                 "file_name": f"PiMS_{cur_time}",
@@ -353,6 +396,7 @@ try:
                 "analogue_gain": 30.0,
                 "timestamp": cur_time_string  # note can get number of secs since unix epoch like this: int(time.time())
                 }
+            logger.info('sending capture request')
             print('sending capture request')
             # Create a ThreadPoolExecutor with 2 worker threads to call the two pi zeros at the same time
             
@@ -369,6 +413,7 @@ try:
                 concurrent.futures.wait([task1, task2, task3, task4, task5, task6])
             # get the location info dict from task3
             FC_data_dict = task3.result()
+            logger.info(FC_data_dict)
             print(FC_data_dict)
             vis_upfacing = task5.result()
             print(vis_upfacing)
@@ -417,23 +462,27 @@ try:
             while GPIO.input(gpio_pin) > 0:
                 time.sleep(0.01)
 
+            logger.info('finished capture')
             print('finished capture')
 
             end_time = time.time()
 
             # Calculate and print the execution time
             execution_time = end_time - start_time
+            logger.info(f'recived capture, time take: {execution_time}')
             print(f'recived capture, time take: {execution_time}')
         time.sleep(0.01)
-        
+    
 
+
+try:
+    logger.info("Starting image capture script")
+    capture_images()
 except KeyboardInterrupt:
-    print("Exiting due to KeyboardInterrupt")
-
+    logger.info("Script interrupted by user")
 finally:
     GPIO.cleanup()
-
-
-vehicle.close()
-
-
+    logger.info("GPIO cleanup done")
+    if vehicle:
+        vehicle.close()
+    logger.info("Vehicle connection closed")
