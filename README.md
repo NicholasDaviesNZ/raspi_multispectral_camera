@@ -53,8 +53,10 @@ ff02::2         ip6-allrouters
 
 If you need to edit it will be sudo nano /etc/... 
 
+If you are using the upward facing cameras as well, you can use the same steps as above for them too, just with --- check the ip addresses in the code ---
+
 Now we are ready to boot, plug the pi zeros into the central/otg micro port, and into the usb3 ports on the pi 4 and plug it in.
-go have a coffee, all of them need to do a bunch or initalisation and it take 5 min or so so if its not working give it a while to finish installing the os's.
+Go have a coffee, all of them need to do a bunch or initalisation and it take 5 min or so so if its not working give it a while to finish installing the os's.
 Check your router for the verious ip addresses, they should show as pi4b pizero1 etc. get the ip address for at least the 4b. I have had trouble with this and have had to connect it via ethernet to the router, then using sudo raspi-config get the wifi connected, not strictly needed but if the imager doesnt get it working this is another option. Note depending on your routers dhcp time out settings this may be different tomorrow so if you cant log in go check it it has changed, you can set to to a static ip in the router if you want, but i wont go into that here. 
 
 Once you have the ip address from the router, ssh into the 4b - ssh pi@192.168.xxx.xxx whatever the ip is that you found from the router - note if your router is on a 10.0.1.x there may be a conflict, if there is either change your router to a 192.168 configuration or change this from being 10.xxx to being 192.168.xxx . if you have trouble with ssh add verbose flag, ssh -vvv pi@...
@@ -76,13 +78,12 @@ Reboot
 
 Re connect via the vnc viewer, and everything *should* have worked, you should be connected to the network bridge, and if you try ssh pi_zero_2@10.0.1.12 it should prompt you about a fingerprint then ask for a password, same for pi_zero_1@10.0.1.11 
 
-For now we will leave the wifi on the zeros on, but will turn it off later. Just make sure that the pi4b is always connecting over usb now wifi. it means during the software setup we can ssh into them from your main computer, rather than creating a chain and going through the ethernet over usb to have a look at what is going on in them. we can also connect direcly to the zeros using vs code through ssh tunnels from our main machine using the wifi if we want to. 
+For now we will leave the wifi on the zeros on, but will turn it off later. Just make sure that the pi4b is always connecting over usb now wifi. It means during the software setup we can ssh into them from your main computer, rather than creating a chain and going through the ethernet over usb to have a look at what is going on in them. We can also connect direcly to the zeros using vs code through ssh tunnels from our main machine using the wifi if we want to. 
 When we want to turn wifi off add the following to the config.txt file of the pi zeros. 
 dtoverlay=disable-wifi
 dtoverlay=disable-bt
 
-
-Now taht you have confirmed everything works, shutdown all of the pi's and download this git repo as a zip folder and extract it on your main computer. insert the pi4b sd card into your computer and copy the folders inside the pi4b folder to the /home/pi/ so it should look like /home/pi/camera/ for example. there is a folder called reflectance_cameras, the contence fo this goes onto the pi zeros which are downward facing (zero 1 and zero 2) and transmitance_cameras (zeros 3 and 4 if they exist). again to /home/pi_zero_1/webserver/ etc. 
+Now that you have confirmed everything works, shutdown all of the pi's and download this git repo as a zip folder and extract it on your main computer. Insert the pi4b sd card into your computer and copy the folders inside the pi4b folder to the /home/pi/ so it should look like /home/pi/camera/ for example. There is a folder called reflectance_cameras, the contents of this goes onto the pi zeros which are downward facing (zero 1 and zero 2) and transmitance_cameras (zeros 3 and 4 if they exist). Again to /home/pi_zero_1/webserver/ etc. 
 
 open your pi4 vnc connection back up and open two terminals and ssh into each of the pi zeros, navigate to home/pi_zero_x/webserver and either activate a vertual env and then run python webserver.py or just run it without the env, do this for all of the pi's. 
 
