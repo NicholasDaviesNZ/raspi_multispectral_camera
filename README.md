@@ -3,18 +3,17 @@
 OS setups:
 Currently the 4b gets 64bit bookworm by defalt and the pi zeros get 32 bit bulls eye. Use the pi imager, and hopefully it will work. The imager will give you the option to edit/customise the os, make sure you do this and give it a username and password - there is no defalt anymore so if you dont it will just give you permission denied errors. The Pi4b is the main pi for this project and its username@host should be pi@pi4b the zeros are pi_zero_1@pizero1 or pi_zero_2@pizero2 etc. Note you dont need to activate wifi on the zeros (or the 4 b for that matter) but it will make trouble shooting easier. Give it wifi creds, change the keyboard layout to your layout (probably us) go to the next tab and enable ssh by password. Pi imager  generates firstrun.sh in the boot directory at the end of the write, if your having trouble getting anything to connect to wifi check in there incase it has hashed the password wrong or something try echo 'raspberry' | openssl passwd -6 -stdin to generate a hash for the password raspberry. Flash the 4b and the verious pi zeros using imager. A note that there seems (for me at this point in time anyway) to be an issue with using imager setting the keyboard type, so be aware that if you use anything which is different between your keyboard and a uk keyboard ie special chars it may result in passwords being declined- by default pi imager seems to set keyboard to UK and changing it does not always work. 
 
-After the image has written follow the below, including some trobule shooting tips
-For a usb network need to change these on the boot partition:
-Https://Artivis.Github.Io/Post/2020/Pi-Zero/
-plug to centre micro usb port otg port - the central port, not the outside one 
-add dtoverlay=dwc2 to the end of the config.txt file (zeros and 4b)
-add modules-load=dwc2,g_ether after rootwait in the cmdline.txt file. note that there must be exactly 1 space after rootwait, and one space before the next command (zeros only)
+After the image has written follow the below, including some trobule shooting tips.
+For a usb network you need to change these on the boot partition:
+Plug to centre micro usb port otg port - the central port, not the outside one 
+Add dtoverlay=dwc2 to the end of the config.txt file (zeros and 4b)
+Add modules-load=dwc2,g_ether after rootwait in the cmdline.txt file. note that there must be exactly 1 space after rootwait, and one space before the next command (zeros only)
 
 Trobule shooting: 
-if you have trouble with ssh add blank file with no extention called ssh to the boot partition
-if you have trouble with user configuration Add userconf.txt containing pi:$6$/4.VdYgDm7RJ0qM1$FwXCeQgDKkqrOU3RIRuDSKpauAbBvP11msq9X58c8Que2l1Dwq3vdJMgiZlQSbEXGaY5esVHGBNbCxKLVNqZW1
-to the boot partition (username pi, password is raspberry)
-for wifi if you have trouble try addeding a file called wpa_supplicant.conf containing:
+If you have trouble with ssh add a blank file with no extention called ssh to the boot partition
+If you have trouble with user configuration add a file called userconf.txt containing pi:$6$/4.VdYgDm7RJ0qM1$FwXCeQgDKkqrOU3RIRuDSKpauAbBvP11msq9X58c8Que2l1Dwq3vdJMgiZlQSbEXGaY5esVHGBNbCxKLVNqZW1
+to the boot partition (username pi, password is raspberry - the hash is above)
+For wifi if you have trouble try adding a file called wpa_supplicant.conf containing:
 country=US
 ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
 update_config=1
@@ -23,10 +22,9 @@ network={
     ssid="xxxxxx"
     psk="xxxxxxx"
 }
-to the boot partition
+to the boot partition or rewrite the image and check/update the firstrun.sh file to ensure it is correct 
 
-
-for the pi zeros, go into the root partition and sudo nano /etc/dhcpcd.conf and go to the end
+For the pi zeros, go into the root partition and sudo nano /etc/dhcpcd.conf and go to the end
 for pi zero 1 add:
 
 interface usb0
@@ -44,7 +42,7 @@ this sets the static ip for pi zero 2 to 10.0.1.12
 
 The 4b uses network manager so we will do it in the gui later. 
 
-then check the host names are correct (for every device), for the zeros and the pi4 nano /etc/hostname and check it is correct (pi4b pizero1 pizero2 etc.)
+Then check the host names are correct (for every device), for the zeros and the pi4 nano /etc/hostname and check it is correct (pi4b pizero1 pizero2 etc.)
 go into nano /etc/hosts and check it looks something like this: where pi4b is whatever the host name should be, pizero1 etc.                        
 127.0.0.1       localhost pi4b
 ::1             localhost ip6-localhost ip6-loopback
@@ -53,7 +51,7 @@ ff02::2         ip6-allrouters
 
 127.0.1.1               pi4b
 
-If you need to edit it will be sudo nano /etc/... sudo will be your normal linux password
+If you need to edit it will be sudo nano /etc/... 
 
 Now we are ready to boot, plug the pi zeros into the central/otg micro port, and into the usb3 ports on the pi 4 and plug it in.
 go have a coffee, all of them need to do a bunch or initalisation and it take 5 min or so so if its not working give it a while to finish installing the os's.
