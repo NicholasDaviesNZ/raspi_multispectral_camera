@@ -53,7 +53,11 @@ ff02::2         ip6-allrouters
 
 If you need to edit it will be sudo nano /etc/... 
 
-If you are using the upward facing cameras as well, you can use the same steps as above for them too, just with --- check the ip addresses in the code ---
+If you are using the upward facing cameras as well, you can use the same steps as above for them too, in the end the ip addresses should look like:
+pi_zero_1_api_url = "http://10.0.1.11:5000/capture" # vis image capture
+pi_zero_2_api_url = "http://10.0.1.12:5000/capture" # noir image capture
+pi_zero_3_api_url = "http://10.0.1.13:5000/capture" # vis upfacing
+pi_zero_4_api_url = "http://10.0.1.14:5000/capture" # noir upfacing
 
 Now we are ready to boot, plug the pi zeros into the central/otg micro port, and into the usb3 ports on the pi 4 and plug it in.
 Go have a coffee, all of them need to do a bunch or initalisation and it take 5 min or so so if its not working give it a while to finish installing the os's.
