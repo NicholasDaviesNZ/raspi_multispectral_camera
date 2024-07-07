@@ -38,7 +38,7 @@ interface usb0
 static ip_address=10.0.1.12/16
 static routers=10.0.1.1
 
-this sets the static ip for pi zero 2 to 10.0.1.12
+This sets the static ip for pi zero 2 to 10.0.1.12
 
 The 4b uses network manager so we will do it in the gui later. 
 
@@ -55,26 +55,26 @@ If you need to edit it will be sudo nano /etc/...
 
 Now we are ready to boot, plug the pi zeros into the central/otg micro port, and into the usb3 ports on the pi 4 and plug it in.
 go have a coffee, all of them need to do a bunch or initalisation and it take 5 min or so so if its not working give it a while to finish installing the os's.
-Check your router for the verious ip addresses, they should show us as pi4b pizero1 etc. get the ip address for at least the 4b. I have had trouble with this and have had to connect it via ethernet to the router, then using sudo raspi-config get the wifi connected, not strictly needed but if the imager doesnt get it working this is another option. Note depending on your routers dhcp time out settings this may be different tomorrow so if you cant log in go check it it has changed, you can set to to a static ip in the router if you want, but i wont go into that here. 
+Check your router for the verious ip addresses, they should show as pi4b pizero1 etc. get the ip address for at least the 4b. I have had trouble with this and have had to connect it via ethernet to the router, then using sudo raspi-config get the wifi connected, not strictly needed but if the imager doesnt get it working this is another option. Note depending on your routers dhcp time out settings this may be different tomorrow so if you cant log in go check it it has changed, you can set to to a static ip in the router if you want, but i wont go into that here. 
 
-once you have the ip address from the router, ssh into the 4b - ssh pi@192.168.xxx.xxx whatever the ip is that you found from the router - note if your router is on a 10.0.1.x there may be a conflict and you might be a conflict, im nto sure, if there is either change your how router to a 192.168 configuration or change this from being 10.xxx to being 192.168.xxx . if you have trouble with ssh add verbose flag, ssh -vvv pi@...
-once your in run sudo raspi-config and go to interfaces and enable vnc connections. you can do updates etc here if you want to.
-Now load up your vnc viewer and connect to it with the same ip, username and password that you used for ssh and you should get the raspberry pi os desktop. 
+Once you have the ip address from the router, ssh into the 4b - ssh pi@192.168.xxx.xxx whatever the ip is that you found from the router - note if your router is on a 10.0.1.x there may be a conflict, if there is either change your router to a 192.168 configuration or change this from being 10.xxx to being 192.168.xxx . if you have trouble with ssh add verbose flag, ssh -vvv pi@...
+Once your in run sudo raspi-config and go to interfaces and enable vnc connections. you can do updates etc here if you want to.
+Now load up your vnc viewer and connect to it with the same ip, username and password that you used for ssh and you should get the raspberry pi os desktop. You can do this with just the command line, but debugging is a bit easier with vnc.
 
 Now we need to configure the pi4b end of the network with the zeros. 
-click on the wifi network icon in the top right, go to advanced options, edit connections. under ethernet you should see wired connection 1 wired connection 2 etc. double click on one of these and if the device is eth0 interface ignore it (the real ethernet port) if it is usb0 do the following:
-go to ipv4 settings set it to manual and click add, set the ip to 10.0.1.2 and the netmask to 16, gate way can stay blank. check taht ipv6 is set to automatic. click save and exit
-find the usb1 interface and do the same but with 10.0.1.3
+Click on the wifi network icon in the top right, go to advanced options, edit connections. Under ethernet you should see wired connection 1 wired connection 2 etc. double click on one of these and if the device is eth0 interface ignore it (the real ethernet port) if it is usb0 do the following:
+Go to ipv4 settings set it to manual and click add, set the ip to 10.0.1.2 and the netmask to 16, gate way can stay blank. Check that ipv6 is set to automatic. Click save and exit.
+Find the usb1 interface and do the same but with 10.0.1.3
 Now back in the network connections box click ethernet and click the little + button in the bottom left and choose bridge set device to usb0 and leave other things as default and it should autogenerate a new bridge port 1 connection,
 go to ipv4 settings and add the ip 10.0.1.20 and netmask 16 and save the connection. 
 
 Now within the bridge connection click add choose ethernet and add the usbxs as devices one at a time. 
 
-check taht the bridge connection is set to auto connect, then go and disable autoconnect on the usb0 and usb1 wired connection interfaces. 
+Check that the bridge connection is set to auto connect, then go and disable autoconnect on the usb0 and usb1 wired connection interfaces. 
 
 Reboot
 
-re connect via the vnc viewer, and everything *should* have worked, you should be connected to the network bridge, and if you try ssh pi_zero_2@10.0.1.12 it should prompt you about a fingerprint then ask for a password, same for pi_zero_1@10.0.1.11 
+Re connect via the vnc viewer, and everything *should* have worked, you should be connected to the network bridge, and if you try ssh pi_zero_2@10.0.1.12 it should prompt you about a fingerprint then ask for a password, same for pi_zero_1@10.0.1.11 
 
 For now we will leave the wifi on the zeros on, but will turn it off later. Just make sure that the pi4b is always connecting over usb now wifi. it means during the software setup we can ssh into them from your main computer, rather than creating a chain and going through the ethernet over usb to have a look at what is going on in them. we can also connect direcly to the zeros using vs code through ssh tunnels from our main machine using the wifi if we want to. 
 When we want to turn wifi off add the following to the config.txt file of the pi zeros. 
