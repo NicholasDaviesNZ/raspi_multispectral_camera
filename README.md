@@ -85,39 +85,46 @@ dtoverlay=disable-bt
 
 Now that you have confirmed everything works, shutdown all of the pi's and download this git repo as a zip folder and extract it on your main computer. Insert the pi4b sd card into your computer and copy the folders inside the pi4b folder to the /home/pi/ so it should look like /home/pi/camera/ for example. There is a folder called reflectance_cameras, the contents of this goes onto the pi zeros which are downward facing (zero 1 and zero 2) and transmitance_cameras (zeros 3 and 4 if they exist). Again to /home/pi_zero_1/webserver/ etc. 
 
-open your pi4 vnc connection back up and open two terminals and ssh into each of the pi zeros, navigate to home/pi_zero_x/webserver and either activate a vertual env and then run python webserver.py or just run it without the env, do this for all of the pi's. 
+Open your pi4 vnc connection back up and open two terminals and ssh into each of the pi zeros, navigate to home/pi_zero_x/webserver and either activate a vertual env and then run python webserver.py or just run it without the env, do this for all of the pi's. 
 
-set the pi zeros to start the webservers on startup, run crontab -e and paste this with the correct username at the bottom of the file
+Set the pi zeros to start the webservers on startup, run: 
+crontab -e and paste this with the correct username at the bottom of the file
 @reboot /bin/sleep 10; /usr/bin/python3 /home/pi_zero_1/webserver/webserver.py >> /home/pi_zero_1/mycronlog.txt 2>&1
 
 
-when creating the venv need to use: --system-site-packages as a flag to be able to accsess the system libcamera
+When creating the venv need to use: --system-site-packages as a flag to be able to accsess the system libcamera
 python3 -m venv venv --system-site-packages  to create the virtual env
 source venv/bin/activate
 
-on the zero, we will create a web server using flask, to do this:
+On the zero, we will create a web server using flask, to do this:
 python3 -m venv venv --system-site-packages  to create the virtual env
 source venv/bin/activate
 python webserver.py should start a web server on  http://0.0.0.0:5000/
 remember to create the ~/webserver and ~/webserver/captures directories
 
-Note about collections needing to be cahnged to collections.abs if there is an error in dronekit, in __init__ file
+Note collections needed to be changed to collections.abs if there is an error in dronekit, in __init__ file
 
-Gide to connect to drone:
+Guide to connect to drone:
 https://www.hackster.io/Matchstic/connecting-pixhawk-to-raspberry-pi-and-nvidia-jetson-b263a7
-inside env pip install pymavlink dronekit imutils
+Inside the env:
+pip install pymavlink dronekit imutils
 
 
-To trigger RPi from gpio, plug into pin 8 of the splitter that is already on the drone for the motors, plug ground and signal in - same as motors. in parameters set servo8_function to -1 (gpio) set relay_pin to mainout8, cam1_type to 2 (relay) cam1_duration to 1 (this is the time that the relay is held open for) ground goes to ground on the Pi, and signal goes to GPIO13 which is on the 3.3v rail and 4 from the usb ports end. 
+To trigger RPi from gpio, plug into pin 8 of the splitter that is already on the drone for the motors - on the pixhawk 6c anyway, plug ground and signal in - same as motors. In parameters set servo8_function to -1 (gpio) set relay_pin to mainout8, cam1_type to 2 (relay) cam1_duration to 1 (this is the time that the relay is held open for) ground goes to ground on the Pi, and signal goes to GPIO13 which is on the 3.3v rail and 4 from the usb ports end. 
 
 
-need to install sudo apt-get install libexiv2-dev libboost-python-dev
-then pip install py3exiv2
+You will need to install some libs to save the metadata to the photos:
+sudo apt-get install libexiv2-dev libboost-python-dev
+pip install py3exiv2
 
-for thermal need to install: sudo apt-get install -y i2c-tools
-need to go into sudo raspi-config and interfaces enable i2c
-may need to go into config.txt and uncoment the dtparam=i2c_arm=on line
-and within the env, pip install smbus pip install RPI.GPIO adafruit-blinka and pip install adafruit-circuitpython-mlx90640
+For thermal you will need to install: 
+sudo apt-get install -y i2c-tools
+then go into sudo raspi-config and interfaces enable i2c
+You may need to go into config.txt and uncoment the dtparam=i2c_arm=on line
+and within the env, 
+pip install smbus 
+pip install RPI.GPIO adafruit-blinka
+pip install adafruit-circuitpython-mlx90640
 you may need to run the following to get some of the modules working:
 cd ~
 pip3 install --upgrade adafruit-python-shell
